@@ -16,6 +16,7 @@ def twoEinsteinSolids():
     solidA.distributeEnergy()
 
     solidAEnergy, solidBEnergy = [], []
+    #TODO: 1,2,3
 
     for _ in range(TWO_SOLIDS_ITERATION):
         particleA = random.choice(solidA)
