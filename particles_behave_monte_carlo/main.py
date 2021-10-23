@@ -1,6 +1,8 @@
 from particleCluster import ParticleCluster
 from particle import Particle
 import random
+import matplotlib.pyplot as plt
+import numpy as np
 
 TWO_SOLIDS_ITERATION = int(1e5)
 
@@ -13,8 +15,6 @@ def twoEinsteinSolids():
     solidA = ParticleCluster(size=100, energy=300)
     solidB = ParticleCluster(size=100, energy=0)
 
-    solidA.distributeEnergy()
-
     solidAEnergy, solidBEnergy = [], []
 
     for _ in range(TWO_SOLIDS_ITERATION):
@@ -25,8 +25,22 @@ def twoEinsteinSolids():
         if particleA.energy > Particle.MIN_ENERGY:
             particleA.energy -= 1
             particleB.energy += 1
-        solidAEnergy.append()
 
+        solidAEnergy.append(solidA.clusterEnergy)
+        solidBEnergy.append(solidB.clusterEnergy)
+
+    twoSolidsPlotter(solidAEnergy, solidBEnergy)
+
+
+def twoSolidsPlotter(solidA, solidB):
+    markerSize = 0.1
+    fig, (ax1, ax2) = plt.subplots(2)
+    iterations = [x for x in range(TWO_SOLIDS_ITERATION)]
+    ax1.scatter(iterations, solidA, s=markerSize)
+    ax2.scatter(iterations, solidB, s=markerSize)
+    ax1.grid()
+    ax2.grid()
+    plt.show()
 
 
 def swapRandom(a, b):

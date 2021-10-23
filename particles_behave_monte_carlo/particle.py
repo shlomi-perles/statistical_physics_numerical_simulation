@@ -1,10 +1,11 @@
 class Particle:
     MIN_ENERGY = 0
-    INIT_ENERGY = 10
+    INIT_ENERGY = 0
 
-    def __init__(self, particleID):
+    def __init__(self, particleID, cluster=None):
         self.__id = particleID
         self.__energy = Particle.INIT_ENERGY
+        self.__cluster = cluster
 
     @property
     def id(self):
@@ -19,7 +20,10 @@ class Particle:
         if energy < Particle.MIN_ENERGY:
             raise MinEnergyError(
                 f"Energy cant be less than {Particle.MIN_ENERGY}")
+        prevEnergy = self.__energy
         self.__energy = energy
+        if self.__cluster:
+            self.__cluster.clusterEnergy += self.energy - prevEnergy
 
 
 class MinEnergyError(ArithmeticError):
