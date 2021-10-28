@@ -43,6 +43,50 @@ def twoSolidsPlotter(solidA, solidB):
     plt.show()
 
 
+def plotHistogram(data, title, ylabel, xticks, xlabel=None, colors=None,
+                  total_width=0.8, single_width=1, legend=True):
+    """
+      Use exemple:
+        plotHistogram({
+        "a": [1, 2, 3, 2, 1],
+        "b": [2, 3, 4, 3, 1],
+        "c": [3, 2, 1, 4, 2],
+        "d": [5, 9, 2, 1, 8],
+        "e": [1, 3, 2, 2, 3],
+        "f": [4, 3, 1, 1, 4],
+    }, "title", "ylabel", ['group1', 'group2', 'group3',
+                                     'group4', 'group5'])
+
+    First group will be: [1,2,3,5,1,4] (first value in each list)
+    """
+
+    fig, ax = plt.subplots()
+    if colors is None:
+        colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+    n_bars = len(data)
+    bar_width = total_width / n_bars
+    bars = []
+
+    for i, (name, values) in enumerate(data.items()):
+
+        x_offset = (i - n_bars / 2) * bar_width + bar_width / 2
+        for x, y in enumerate(values):
+            bar = ax.bar(x + x_offset, y, width=bar_width * single_width,
+                         color=colors[i % len(colors)])
+        bars.append(bar[0])
+
+    if legend:
+        ax.legend(bars, data.keys())
+
+    ax.set_ylabel(ylabel)
+    if xlabel:
+        ax.set_xlabel(xlabel)
+    ax.set_title(title)
+    ax.set_xticklabels([0] + xticks)
+    plt.show()
+
+
 def swapRandom(a, b):
     return (a, b) if random.getrandbits(1) else (b, a)
 
