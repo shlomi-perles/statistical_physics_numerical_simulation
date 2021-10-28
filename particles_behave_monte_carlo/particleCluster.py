@@ -1,4 +1,4 @@
-from particle import Particle, MinEnergyError
+from particles_behave_monte_carlo.particle import Particle, MinEnergyError
 import random
 
 
@@ -58,7 +58,8 @@ class ParticleCluster:
         if newEnergy < Particle.MIN_ENERGY:
             raise MinEnergyError(
                 f"Cluster energy must be at least {Particle.MIN_ENERGY}")
-        self.__clusterEnergy = newEnergy
+        self.__clusterEnergy = \
+            newEnergy
 
     @property
     def particles(self):

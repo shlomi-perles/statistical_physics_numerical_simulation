@@ -1,24 +1,32 @@
-from particleCluster import ParticleCluster
-from particle import Particle
+from particles_behave_monte_carlo.particleCluster import ParticleCluster
+from particles_behave_monte_carlo.particle import Particle
 import random
 import matplotlib.pyplot as plt
 import numpy as np
+import functools
+
 
 TWO_SOLIDS_ITERATION = int(1e5)
+METROPOLIS_ITERATION = int(1e7)
+T = 2.5
 
 
 def main():
     twoEinsteinSolids()
 
+
 def twoEinsteinSolids():
     solidA = ParticleCluster(size=100, energy=300)
     solidB = ParticleCluster(size=100, energy=0)
+    solid = ParticleCluster(size=0, energy=0)
+    solid += solidA
+    solid += solidB
 
     solidAEnergy, solidBEnergy = [], []
 
     for _ in range(TWO_SOLIDS_ITERATION):
-        particleA = random.choice(solidA)
-        particleB = random.choice(solidB)
+        particleA = random.choice(solid)
+        particleB = random.choice(solid)
         particleA, particleB = swapRandom(particleA, particleB)
 
         if particleA.energy > Particle.MIN_ENERGY:
@@ -51,12 +59,15 @@ def twoSolidsPlotter(solidA, solidB):
     ax1.set_ylabel("Solid Energy [a.u.]")
     ax2.set_ylabel("Solid Energy [a.u.]")
 
+    ax1.axhspan(149, 151, color='red')
+    ax2.axhspan(149, 151, color='red')
+
     xlim_space = TWO_SOLIDS_ITERATION//100
     ax1.set_xlim([-xlim_space, TWO_SOLIDS_ITERATION+xlim_space])
     ax2.set_xlim([-xlim_space, TWO_SOLIDS_ITERATION+xlim_space])
 
-    ax1.set_ylim(ymin=0)
-    ax2.set_ylim(ymin=0)
+    ax1.set_ylim(bottom=0)
+    ax2.set_ylim(bottom=0)
 
     fig.tight_layout()
     plt.show()
@@ -65,7 +76,7 @@ def twoSolidsPlotter(solidA, solidB):
 def plotHistogram(data, title, ylabel, xticks, xlabel=None, colors=None,
                   total_width=0.8, single_width=1, legend=True):
     """
-      Use exemple:
+      Use example:
         plotHistogram({
         "a": [1, 2, 3, 2, 1],
         "b": [2, 3, 4, 3, 1],
@@ -110,5 +121,71 @@ def swapRandom(a, b):
     return (a, b) if random.getrandbits(1) else (b, a)
 
 
+def metropolis():
+
+    solid = ParticleCluster(size=100, energy=0)
+    solid_energy = []
+    q1_hist = [0 for i in range(int(10 * T))]
+    list_of_hist = []
+    for i in range(METROPOLIS_ITERATION):
+        particle = random.choice(solid)
+        result = random.choice([1, -1])
+        if result == -1:
+            if not particle.energy:
+                continue
+            particle.energy += result
+        else:
+            p = random.random()
+            if p > np.exp(-1/T):
+                continue
+
+            particle.energy += result
+
+        solid_energy.append(solid.clusterEnergy)
+        if solid[0].energy < int(T * 10):
+            q1_hist[solid[0].energy] += 1 / METROPOLIS_ITERATION
+
+        if i in [int(2e6), int(4e6), int(6e6), int(8e6), int(1e7) - 1]:
+            list_of_hist.append(single_hist(solid))
+    # TODO here is the attempt to plot the first histogram, its not clear to me why we have more than 5 groups
+    keys = list(range(len(list_of_hist)))
+    dictionary = dict(zip(keys, list_of_hist))
+    plotHistogram(dictionary, "distribution of energy quantums in different moments", "rate in the solid",
+                  ["2e6", "4e6", "6e6", "8e6", "1e7"])
+    # TODO this is the attempt to create the second histogram. just need to make a simple bars plot
+    # keys = list(range(len(q1_hist)))
+    # values = [[i] for i in q1_hist]
+    # dictionary = dict(zip(keys, values))
+    f(q1_hist)
+    # a = []
+    # for i in range(int(T * 10)):
+    #     if i in [0,5,10,15,20,24]:
+    #         a.append(str(i))
+    #     else:
+    #         a.append("")
+    # plotHistogram(dictionary, "Number of iterations of q(1) in every energy level",
+    #               "rate from all iterations", a)
+
+
+def f(q_hist):
+    fig = plt.figure()
+    ax = fig.add_axes([0, 0, 1, 1])
+    langs = list(range(int(T * 10)))
+    ax.bar(langs, q_hist)
+    fig.tight_layout()
+    plt.show()
+
+
+def single_hist(solid):
+    hist = [0 for i in range(int(T * 10))]
+    for particle in solid.particles:
+        if particle.energy < int(T * 10):
+            hist[particle.energy] += 1 / len(solid)
+    return hist
+
+
+
 if __name__ == "__main__":
-    main()
+
+    # main()
+    metropolis()
