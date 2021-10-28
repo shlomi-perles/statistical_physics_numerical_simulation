@@ -152,19 +152,8 @@ def metropolis():
     dictionary = dict(zip(keys, list_of_hist))
     plotHistogram(dictionary, "distribution of energy quantums in different moments", "rate in the solid",
                   ["2e6", "4e6", "6e6", "8e6", "1e7"])
-    # TODO this is the attempt to create the second histogram. just need to make a simple bars plot
-    # keys = list(range(len(q1_hist)))
-    # values = [[i] for i in q1_hist]
-    # dictionary = dict(zip(keys, values))
+
     f(q1_hist)
-    # a = []
-    # for i in range(int(T * 10)):
-    #     if i in [0,5,10,15,20,24]:
-    #         a.append(str(i))
-    #     else:
-    #         a.append("")
-    # plotHistogram(dictionary, "Number of iterations of q(1) in every energy level",
-    #               "rate from all iterations", a)
 
 
 def f(q_hist):
