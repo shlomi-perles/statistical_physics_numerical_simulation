@@ -10,7 +10,6 @@ TWO_SOLIDS_ITERATION = int(1e5)
 def main():
     twoEinsteinSolids()
 
-
 def twoEinsteinSolids():
     solidA = ParticleCluster(size=100, energy=300)
     solidB = ParticleCluster(size=100, energy=0)
@@ -36,10 +35,30 @@ def twoSolidsPlotter(solidA, solidB):
     markerSize = 0.1
     fig, (ax1, ax2) = plt.subplots(2)
     iterations = [x for x in range(TWO_SOLIDS_ITERATION)]
+
     ax1.scatter(iterations, solidA, s=markerSize)
     ax2.scatter(iterations, solidB, s=markerSize)
+
     ax1.grid()
     ax2.grid()
+
+    ax1.set_title("solid A")
+    ax2.set_title("solid B")
+
+    ax1.set_xlabel("Iteration")
+    ax2.set_xlabel("Iteration")
+
+    ax1.set_ylabel("Solid Energy [a.u.]")
+    ax2.set_ylabel("Solid Energy [a.u.]")
+
+    xlim_space = TWO_SOLIDS_ITERATION//100
+    ax1.set_xlim([-xlim_space, TWO_SOLIDS_ITERATION+xlim_space])
+    ax2.set_xlim([-xlim_space, TWO_SOLIDS_ITERATION+xlim_space])
+
+    ax1.set_ylim(ymin=0)
+    ax2.set_ylim(ymin=0)
+
+    fig.tight_layout()
     plt.show()
 
 
