@@ -125,7 +125,7 @@ def metropolis():
 
     solid = ParticleCluster(size=100, energy=0)
     solid_energy = []
-    q1_hist = [0 for i in range(int(10 * T))]
+    q1_hist = [0 for j in range(int(10 * T))]
     list_of_hist = []
     for i in range(METROPOLIS_ITERATION):
         particle = random.choice(solid)
@@ -145,13 +145,15 @@ def metropolis():
         if solid[0].energy < int(T * 10):
             q1_hist[solid[0].energy] += 1 / METROPOLIS_ITERATION
 
-        if i in [int(2e6), int(4e6), int(6e6), int(8e6), int(1e7) - 1]:
+        if i in [int(2e6), int(4e6), int(6e6), int(8e6)]:
             list_of_hist.append(single_hist(solid))
+    list_of_hist.append(single_hist(solid))
+
     # TODO here is the attempt to plot the first histogram, its not clear to me why we have more than 5 groups
-    keys = list(range(len(list_of_hist)))
+    keys = ["2e6", "4e6", "6e6", "8e6", "1e7"]
     dictionary = dict(zip(keys, list_of_hist))
     plotHistogram(dictionary, "distribution of energy quantums in different moments", "rate in the solid",
-                  ["2e6", "4e6", "6e6", "8e6", "1e7"])
+                  list(range(len(list_of_hist))))
 
     f(q1_hist)
 
@@ -166,9 +168,9 @@ def f(q_hist):
 
 
 def single_hist(solid):
-    hist = [0 for i in range(int(T * 10))]
+    hist = [0 for i in range(16)]
     for particle in solid.particles:
-        if particle.energy < int(T * 10):
+        if particle.energy < 16:
             hist[particle.energy] += 1 / len(solid)
     return hist
 
@@ -178,3 +180,6 @@ if __name__ == "__main__":
 
     # main()
     metropolis()
+    # plotHistogram(
+    #     {"a": [1, 2, 3, 2, 1], "b": [2, 3, 4, 3, 1], "c": [3, 2, 1, 4, 2], "d": [5, 9, 2, 1, 8], "e": [1, 3, 2, 2, 3],
+    #         "f": [4, 3, 1, 1, 4], }, "title", "ylabel", ['group1', 'group2', 'group3', 'group4', 'group5'])
