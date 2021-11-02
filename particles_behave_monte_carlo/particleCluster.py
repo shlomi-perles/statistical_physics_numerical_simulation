@@ -1,4 +1,4 @@
-from particles_behave_monte_carlo.particle import Particle, MinEnergyError
+from particle import Particle, MinEnergyError
 import random
 
 

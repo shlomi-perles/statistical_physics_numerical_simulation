@@ -1,10 +1,9 @@
-from particles_behave_monte_carlo.particleCluster import ParticleCluster
-from particles_behave_monte_carlo.particle import Particle
+from particleCluster import ParticleCluster
+from particle import Particle
 import random
 import matplotlib.pyplot as plt
 import numpy as np
 import functools
-
 
 TWO_SOLIDS_ITERATION = int(1e5)
 METROPOLIS_ITERATION = int(1e7)
@@ -39,13 +38,48 @@ def twoEinsteinSolids():
     twoSolidsPlotter(solidAEnergy, solidBEnergy)
 
 
+def metropolis():
+    solid = ParticleCluster(size=100, energy=0)
+    totalEnergy = []
+    q1_hist = [0] * int(10 * T)
+    list_of_hist = []
+
+    for i in range(METROPOLIS_ITERATION):
+        particle = random.choice(solid)
+        result = random.choice([1, -1])
+        record_energy(totalEnergy, solid, q1_hist)
+
+        if result == -1:
+            if particle.energy <= Particle.MIN_ENERGY:
+                # record_energy(totalEnergy, solid, q1_hist)
+                continue
+            particle.energy += result
+        else:
+            p = random.random()
+            if p > np.exp(-1 / T):
+                # record_energy(totalEnergy, solid, q1_hist)
+                continue
+
+            particle.energy += result
+
+        if i in {int(2e6), int(4e6), int(6e6), int(8e6)}:
+            list_of_hist.append(single_hist(solid))
+
+    list_of_hist.append(single_hist(solid))
+
+    keys = ["2e6", "4e6", "6e6", "8e6", "1e7"]
+    plotMetropolis(totalEnergy, q1_hist, dict(zip(keys, list_of_hist)))
+
+
+# --------------------------- plot ---------------------------------
+
 def twoSolidsPlotter(solidA, solidB):
     markerSize = 0.1
     fig, (ax1, ax2) = plt.subplots(2)
     iterations = [x for x in range(TWO_SOLIDS_ITERATION)]
 
-    ax1.scatter(iterations, solidA, s=markerSize)
-    ax2.scatter(iterations, solidB, s=markerSize)
+    ax1.scatter(iterations, solidA, s=markerSize, label=r'$q_A$')
+    ax2.scatter(iterations, solidB, s=markerSize, label=r'$q_B$')
 
     ax1.grid()
     ax2.grid()
@@ -62,14 +96,51 @@ def twoSolidsPlotter(solidA, solidB):
     ax1.axhspan(149, 151, color='red')
     ax2.axhspan(149, 151, color='red')
 
-    xlim_space = TWO_SOLIDS_ITERATION//100
-    ax1.set_xlim([-xlim_space, TWO_SOLIDS_ITERATION+xlim_space])
-    ax2.set_xlim([-xlim_space, TWO_SOLIDS_ITERATION+xlim_space])
+    xlim_space = TWO_SOLIDS_ITERATION // 100
+    ax1.set_xlim([-xlim_space, TWO_SOLIDS_ITERATION + xlim_space])
+    ax2.set_xlim([-xlim_space, TWO_SOLIDS_ITERATION + xlim_space])
 
     ax1.set_ylim(bottom=0)
     ax2.set_ylim(bottom=0)
 
+    ax1.legend(markerscale=10)
+    ax2.legend(markerscale=10)
+
     fig.tight_layout()
+    plt.show()
+
+
+def plotMetropolis(totalEnergy, q_hist, hist_dict):
+    plotTotalEnergy(totalEnergy)
+    plotHistogram(hist_dict,
+                  "Distribution of energy quantums in different iterations",
+                  "Ratio in the solid",
+                  list(range(16)), xlabel="Energy quantums")
+    plotSingleParticleHist(q_hist)
+
+
+def plotTotalEnergy(totalEnergy):
+    fig, ax = plt.subplots()
+    ax.scatter(np.arange(0, METROPOLIS_ITERATION, 1), totalEnergy,
+                s=0.1, label=r'$q_tot$')
+    ax.set_title(r'$q_tot\/\/VS\/\/Iterations$')
+    ax.set_xlabel("Iteration")
+    ax.set_ylabel(r'$q_tot$')
+    ax.grid()
+    ax.legend(markerscale=10)
+    plt.show()
+
+
+def plotSingleParticleHist(q_hist):
+    fig, ax = plt.subplots()
+    langs = list(range(int(T * 8)))
+    ax.bar(langs, q_hist[0:20])
+    ax.grid()
+
+    ax.set_title(r'$Iterations\/\/VS\/\/q_1\/\/energy\/\/quantums$')
+
+    ax.set_xlabel(r'$q_1\/\/energy\/\/quantums$')
+    ax.set_ylabel(r'$Iteration\/\/(Normalized)$')
     plt.show()
 
 
@@ -113,72 +184,30 @@ def plotHistogram(data, title, ylabel, xticks, xlabel=None, colors=None,
     if xlabel:
         ax.set_xlabel(xlabel)
     ax.set_title(title)
-    ax.set_xticklabels([0] + xticks)
+    # ax.set_xticklabels([0] + xticks)
     plt.show()
 
+
+# --------------------------- tools --------------------------------
 
 def swapRandom(a, b):
     return (a, b) if random.getrandbits(1) else (b, a)
 
 
-def metropolis():
-
-    solid = ParticleCluster(size=100, energy=0)
-    solid_energy = []
-    q1_hist = [0 for j in range(int(10 * T))]
-    list_of_hist = []
-    for i in range(METROPOLIS_ITERATION):
-        particle = random.choice(solid)
-        result = random.choice([1, -1])
-        if result == -1:
-            if not particle.energy:
-                continue
-            particle.energy += result
-        else:
-            p = random.random()
-            if p > np.exp(-1/T):
-                continue
-
-            particle.energy += result
-
-        solid_energy.append(solid.clusterEnergy)
-        if solid[0].energy < int(T * 10):
-            q1_hist[solid[0].energy] += 1 / METROPOLIS_ITERATION
-
-        if i in [int(2e6), int(4e6), int(6e6), int(8e6)]:
-            list_of_hist.append(single_hist(solid))
-    list_of_hist.append(single_hist(solid))
-
-    # TODO here is the attempt to plot the first histogram, its not clear to me why we have more than 5 groups
-    keys = ["2e6", "4e6", "6e6", "8e6", "1e7"]
-    dictionary = dict(zip(keys, list_of_hist))
-    plotHistogram(dictionary, "distribution of energy quantums in different moments", "rate in the solid",
-                  list(range(len(list_of_hist))))
-
-    f(q1_hist)
-
-
-def f(q_hist):
-    fig, ax = plt.subplots()
-    langs = list(range(int(T * 10)))
-    ax.bar(langs, q_hist)
-    # fig.tight_layout()
-    plt.show()
+def record_energy(solid_energy, solid, q1_hist):
+    solid_energy.append(solid.clusterEnergy)
+    if solid[0].energy < int(T * 10):
+        q1_hist[solid[0].energy] += 1 / METROPOLIS_ITERATION
 
 
 def single_hist(solid):
-    hist = [0 for i in range(16)]
+    hist = [0] * 16
     for particle in solid.particles:
         if particle.energy < 16:
             hist[particle.energy] += 1 / len(solid)
     return hist
 
 
-
 if __name__ == "__main__":
-
     # main()
     metropolis()
-    # plotHistogram(
-    #     {"a": [1, 2, 3, 2, 1], "b": [2, 3, 4, 3, 1], "c": [3, 2, 1, 4, 2], "d": [5, 9, 2, 1, 8], "e": [1, 3, 2, 2, 3],
-    #         "f": [4, 3, 1, 1, 4], }, "title", "ylabel", ['group1', 'group2', 'group3', 'group4', 'group5'])
