@@ -159,11 +159,10 @@ def metropolis():
 
 
 def f(q_hist):
-    fig = plt.figure()
-    ax = fig.add_axes([0, 0, 1, 1])
+    fig, ax = plt.subplots()
     langs = list(range(int(T * 10)))
     ax.bar(langs, q_hist)
-    fig.tight_layout()
+    # fig.tight_layout()
     plt.show()
 
 
