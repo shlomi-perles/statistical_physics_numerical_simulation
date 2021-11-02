@@ -3,7 +3,6 @@ from particle import Particle
 import random
 import matplotlib.pyplot as plt
 import numpy as np
-import functools
 
 TWO_SOLIDS_ITERATION = int(1e5)
 METROPOLIS_ITERATION = int(1e7)
@@ -12,6 +11,7 @@ T = 2.5
 
 def main():
     twoEinsteinSolids()
+    metropolis()
 
 
 def twoEinsteinSolids():
@@ -209,5 +209,5 @@ def single_hist(solid):
 
 
 if __name__ == "__main__":
-    # main()
-    metropolis()
+    main()
+
