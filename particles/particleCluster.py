@@ -1,4 +1,4 @@
-from particle import Particle, MinEnergyError
+from particles.particle import Particle, MinEnergyError
 import random
 
 
@@ -69,7 +69,7 @@ class ParticleCluster:
         """
         get list from distributeFunc of energy to distribute between
         particles
-        :param distributeFunc: get cluster size and cluster energy and
+        :param distributeFunc: get cluster particlesIterate and cluster energy and
         distribute by some function. Default distribute random energy
         """
         if distributeFunc in ParticleCluster.ENERGY_DISTRIBUTION_DICT:

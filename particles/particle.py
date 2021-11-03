@@ -1,4 +1,3 @@
-
 class Particle:
     MIN_ENERGY = 0
     INIT_ENERGY = 0

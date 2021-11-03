@@ -1,5 +1,5 @@
-from particleCluster import ParticleCluster
-from particle import Particle
+from particles.particleCluster import ParticleCluster
+from particles.particle import Particle
 import random
 import matplotlib.pyplot as plt
 import numpy as np
@@ -49,21 +49,19 @@ def metropolis():
         result = random.choice([1, -1])
         record_energy(totalEnergy, solid, q1_hist)
 
+        if i in {int(2e6), int(4e6), int(6e6), int(8e6)}:
+            list_of_hist.append(single_hist(solid))
+
         if result == -1:
             if particle.energy <= Particle.MIN_ENERGY:
-                # record_energy(totalEnergy, solid, q1_hist)
                 continue
             particle.energy += result
         else:
             p = random.random()
             if p > np.exp(-1 / T):
-                # record_energy(totalEnergy, solid, q1_hist)
                 continue
 
             particle.energy += result
-
-        if i in {int(2e6), int(4e6), int(6e6), int(8e6)}:
-            list_of_hist.append(single_hist(solid))
 
     list_of_hist.append(single_hist(solid))
 
