@@ -1,4 +1,6 @@
+from __future__ import annotations
 import numpy as np
+
 
 MAX_X = 1
 MIN_X = 0
@@ -16,7 +18,7 @@ class ParticleNp:
         self.__id = particleID
         self.__energy = energy
         self.__position = np.array(position)
-        self.__velocity = velocity
+        self.__velocity = np.array(velocity)  # הפכתי גם את זה למערך
         self.__r = r
 
         # Set to true if you want to record particles velocity and
@@ -79,7 +81,7 @@ class ParticleNp:
 
     @velocity.setter
     def velocity(self, velocity):
-        self.__velocity = velocity
+        self.__velocity = np.array(velocity)
 
     @r.setter
     def r(self, r):
@@ -103,11 +105,10 @@ class ParticleNp:
         """
         otherRadius = 0
         if isinstance(particle, ParticleNp):
+            otherRadius = particle.r  # החלפתי כאן בין השורות
             particle = particle.position
-            otherRadius = particle.r
 
-        return np.linalg.norm(particle - self.position) \
-               - self.r - otherRadius
+        return np.linalg.norm(particle - self.position) - self.r - otherRadius
 
     def velocityTo(self, particle):
         """
@@ -134,6 +135,38 @@ class ParticleNp:
 
         if self.record:
             self.singleRecord()
+
+    def min_dt_wall(self):
+        """
+        returns the minimum dt before meeting any wall
+        """
+        values = []
+        if self.velocity[0] < 0:
+            values.append((self.position[0] - self.r) / abs(self.velocity[0]))
+        else:
+            values.append((1 - self.position[0] - self.r) / self.velocity[0])
+
+        if self.velocity[1] < 0:
+            values.append((self.position[1] - self.r) / abs(self.velocity[1]))
+        else:
+            values.append((1 - self.position[1] - self.r) / self.velocity[1])
+        return min(values)
+
+    def dt_to_collision_between(self, other : ParticleNp):
+
+        dl = self.position - other.position
+        dv = self.velocity - other.velocity
+        s = np.dot(dv, dl)
+        dl_squared = np.power(np.linalg.norm(dl), 2)
+        dv_squared = np.power(np.linalg.norm(dv), 2)
+        gama = s**2 - dv_squared * (dl_squared - self.r - other.r)
+
+        if gama > 0 and s < 0:
+            return - (s + np.sqrt(gama)) / dv_squared
+        return np.inf
+
+
+
 
 
 class MinEnergyError(ArithmeticError):
