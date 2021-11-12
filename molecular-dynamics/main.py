@@ -17,6 +17,8 @@ def main():
 
 
 def calculate_minimum_dt_to_collision(cluster: list[ParticleNp]):
+    # TODO: this function currently just calculatinf the dt, bot not returning the type of collison
+    #       and not the particles which taking part in the collision
     values = []
     for i in range(3):
         for j in range(i+1, 4):
