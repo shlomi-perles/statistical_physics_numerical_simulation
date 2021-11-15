@@ -30,7 +30,7 @@ def main():
             update_cluster(cluster, get_closest_event(cluster, walls))
             iteration += 1
 
-        np.save(f'results\\radius_{radius}.npy', particle.recordingFilm)
+        np.save(f'results\\radius_{radius}.npy', cluster)
 
 
 def init_particles(radius):
