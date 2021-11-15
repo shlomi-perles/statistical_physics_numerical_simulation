@@ -2,7 +2,7 @@ from particles.particleNp import ParticleNp
 import numpy as np
 import matplotlib.pyplot as plt
 
-MAX_VELOCITY = 2
+
 PARTICLE_IDX = 0
 OTHER_OBJ_IDX = 1
 PARTICLE_DIST_IDX = 2
@@ -42,7 +42,7 @@ def init_particles(radius):
     return np.array([a, b, c, d])
 
 
-def get_closest_event(cluster: np.array[ParticleNp], walls: tuple):
+def get_closest_event(cluster, walls: tuple):
     """
     walls positions:
                     [0,-1]
@@ -100,7 +100,7 @@ def get_wall_event(closest_event, particle, wall):
     return closest_event
 
 
-def update_cluster(cluster: np.array[ParticleNp], event):
+def update_cluster(cluster, event):
     for particle in cluster:
         particle.update(event[DT_IDX])
 
@@ -155,38 +155,32 @@ def plot(cluster):
     plt.show()
 
 
-def discretization(cluster: np.array[ParticleNp]):
-    v_rounds = np.linspace(- MAX_VELOCITY, MAX_VELOCITY, 200)
-    # v_abs_rounds = np.linspace(0, MAX_VELOCITY, 100)
-    p_rounds = np.linspace(0, 1, 10)
-
-    for particle in cluster:
-        positions = particle.recordingFilm['position']
-        x = np.array([position[0] for position in positions])
-        y = np.array([position[1] for position in positions])
-        rounded_x = round_values(x, p_rounds)
-        rounded_y = round_values(y, p_rounds)
-        new_positions = [(rounded_x[i], rounded_y[i]) for i in range(rounded_x.size)]
-
-        velocities = particle.recordingFilm['velocity']
-        v_x = np.array([v[0] for v in velocities])
-        v_y = np.array([v[1] for v in velocities])
-        rounded_v_x = round_values(v_x, v_rounds)
-        rounded_v_y = round_values(v_y, v_rounds)
-        new_velocities = [(rounded_v_x[i], rounded_v_y[i]) for i in range(rounded_v_x.size)]
-
-        particle.recordingFilm({'position': new_positions, 'velocity': new_velocities})
+# def discretization(cluster: np.array[ParticleNp]):
+#     v_rounds = np.linspace(- MAX_VELOCITY, MAX_VELOCITY, 200)
+#     # v_abs_rounds = np.linspace(0, MAX_VELOCITY, 100)
+#     p_rounds = np.linspace(0, 1, 10)
+#
+#     for particle in cluster:
+#         positions = particle.recordingFilm['position']
+#         x = np.array([position[0] for position in positions])
+#         y = np.array([position[1] for position in positions])
+#         rounded_x = round_values(x, p_rounds)
+#         rounded_y = round_values(y, p_rounds)
+#         new_positions = [(rounded_x[i], rounded_y[i]) for i in range(rounded_x.size)]
+#
+#         velocities = particle.recordingFilm['velocity']
+#         v_x = np.array([v[0] for v in velocities])
+#         v_y = np.array([v[1] for v in velocities])
+#         rounded_v_x = round_values(v_x, v_rounds)
+#         rounded_v_y = round_values(v_y, v_rounds)
+#         new_velocities = [(rounded_v_x[i], rounded_v_y[i]) for i in range(rounded_v_x.size)]
+#
+#         particle.recordingFilm({'position': new_positions, 'velocity': new_velocities})
 
         # abs_v = np.array([np.linalg.norm(v) for v in velocities])
         # rounded_abs_v = round_values(abs_v, v_abs_rounds)
 
 
-
-
-def round_values(values, rounds):
-    diff = np.subtract.outer(values, rounds)
-    indexes = np.argmin(abs(diff), axis=1)
-    return rounds[indexes]
 
 
 
@@ -207,3 +201,4 @@ def round_values(values, rounds):
 
 if __name__ == "__main__":
     main()
+

@@ -6,6 +6,7 @@ MIN_X = 0
 MAX_Y = 1
 MIN_Y = 0
 DT_STORE = 1
+MAX_VELOCITY = 2
 
 
 class ParticleNp:
@@ -20,6 +21,7 @@ class ParticleNp:
         self.__position = np.array(position)
         self.__velocity = np.array(velocity)
         self.__r = r
+        self.__rounds = np.linspace(- MAX_VELOCITY, MAX_VELOCITY, 200)
 
         # Set to true if you want to record particles velocity and
         # position at each update. Records located at recordingFilm.
@@ -141,7 +143,7 @@ class ParticleNp:
         :return:
         """
         np.append(self.recordingFilm['position'], round(self.position, 1))
-        np.append(self.recordingFilm['velocity'], self.velocity)
+        np.append(self.recordingFilm['velocity'], self.round_value(self.velocity))
 
     def update(self, dt):
         """
@@ -188,6 +190,11 @@ class ParticleNp:
         if gama > 0 > s:
             return - (s + np.sqrt(gama)) / dv_squared
         return np.inf
+
+    def round_value(self, value, rounds):
+        diff = np.subtract(value, rounds)
+        index = np.argmin(abs(diff), axis=1)
+        return rounds[index]
 
 
 class MinEnergyError(ArithmeticError):
