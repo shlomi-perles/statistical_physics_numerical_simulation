@@ -1,11 +1,11 @@
 from __future__ import annotations
 import numpy as np
 
-
 MAX_X = 1
 MIN_X = 0
 MAX_Y = 1
 MIN_Y = 0
+DT_STORE = 1
 
 
 class ParticleNp:
@@ -18,7 +18,7 @@ class ParticleNp:
         self.__id = particleID
         self.__energy = energy
         self.__position = np.array(position)
-        self.__velocity = np.array(velocity)  # הפכתי גם את זה למערך
+        self.__velocity = np.array(velocity)
         self.__r = r
 
         # Set to true if you want to record particles velocity and
@@ -26,6 +26,30 @@ class ParticleNp:
         self.__record = False
         self.__recordingFilm = {'position': np.array([]),
                                 'velocity': np.array([])}
+
+    @property
+    def x(self):
+        return self.position[0]
+
+    @property
+    def y(self):
+        return self.position[1]
+
+    @property
+    def vx(self):
+        return self.velocity[0]
+
+    @property
+    def vy(self):
+        return self.velocity[1]
+
+    @vx.setter
+    def vx(self, new_vx):
+        self.velocity[0] = new_vx
+
+    @vy.setter
+    def vy(self, new_vy):
+        self.velocity[1] = new_vy
 
     @property
     def id(self):
@@ -66,17 +90,9 @@ class ParticleNp:
     @position.setter
     def position(self, position):
         """
-        Update position and if clash with a wall - negate the corrct
-        velocity.
+        Update position
         :param position:
-        :return:
         """
-        if position[0] > MAX_X or position[0] < MIN_X:
-            self.velocity[0] = -self.velocity[0]
-
-        if position[1] > MAX_Y or position[1] < MIN_Y:
-            self.velocity[1] = -self.velocity[1]
-
         self.__position = position
 
     @velocity.setter
@@ -89,11 +105,11 @@ class ParticleNp:
 
     @record.setter
     def record(self, needToRecord):
-        self.record = needToRecord
+        self.__record = needToRecord
 
     @recordingFilm.setter
     def recordingFilm(self, film):
-        self.recordingFilm = film
+        self.__recordingFilm = film
 
     def distanceTo(self, particle):
         """
@@ -105,10 +121,11 @@ class ParticleNp:
         """
         otherRadius = 0
         if isinstance(particle, ParticleNp):
-            otherRadius = particle.r  # החלפתי כאן בין השורות
+            otherRadius = particle.r
             particle = particle.position
 
-        return np.linalg.norm(particle - self.position) - self.r - otherRadius
+        return np.linalg.norm(
+            particle - self.position) - self.r - otherRadius
 
     def velocityTo(self, particle):
         """
@@ -123,18 +140,23 @@ class ParticleNp:
         Record current state only. One record will be add to recordingFilm.
         :return:
         """
-        np.append(self.recordingFilm['position'], self.position)
+        np.append(self.recordingFilm['position'], round(self.position, 1))
         np.append(self.recordingFilm['velocity'], self.velocity)
 
-    def update(self):
+    def update(self, dt):
         """
         Update particle according to velocity and position. Will Record
         particle state at the and if record flag set to True.
         :return:
         """
+        update_pos = self.position + self.velocity * dt
 
         if self.record:
-            self.singleRecord()
+            for discrete_dt in np.linspace(0, dt, dt.astype(int)):
+                self.position = self.position + self.velocity * discrete_dt
+                self.singleRecord()
+
+            self.position = update_pos
 
     def min_dt_wall(self):
         """
@@ -142,31 +164,30 @@ class ParticleNp:
         """
         values = []
         if self.velocity[0] < 0:
-            values.append((self.position[0] - self.r) / abs(self.velocity[0]))
+            values.append(
+                (self.position[0] - self.r) / abs(self.velocity[0]))
         else:
             values.append((1 - self.position[0] - self.r) / self.velocity[0])
 
         if self.velocity[1] < 0:
-            values.append((self.position[1] - self.r) / abs(self.velocity[1]))
+            values.append(
+                (self.position[1] - self.r) / abs(self.velocity[1]))
         else:
             values.append((1 - self.position[1] - self.r) / self.velocity[1])
         return min(values)
 
-    def dt_to_collision_between(self, other : ParticleNp):
+    def dt_to_collision_between(self, other: ParticleNp):
 
         dl = self.position - other.position
         dv = self.velocity - other.velocity
         s = np.dot(dv, dl)
         dl_squared = np.power(np.linalg.norm(dl), 2)
         dv_squared = np.power(np.linalg.norm(dv), 2)
-        gama = s**2 - dv_squared * (dl_squared - self.r - other.r)
+        gama = s ** 2 - dv_squared * (dl_squared - self.r - other.r)
 
         if gama > 0 and s < 0:
             return - (s + np.sqrt(gama)) / dv_squared
         return np.inf
-
-
-
 
 
 class MinEnergyError(ArithmeticError):
