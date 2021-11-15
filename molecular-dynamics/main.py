@@ -99,20 +99,6 @@ def get_wall_event(closest_event, particle, wall):
 
     return closest_event
 
-
-def calculate_minimum_dt_to_collision(cluster: list[ParticleNp]):
-    # TODO: this function currently just calculatinf the dt, bot not returning the type of collison
-    #       and not the particles which taking part in the collision
-    possibles_dt = []
-    for i in range(3):
-        for j in range(i + 1, 4):
-            possibles_dt.append(
-                cluster[i].dt_to_collision_between(cluster[j]))
-    for particle in cluster:
-        possibles_dt.append(particle.min_dt_wall())
-    return min(possibles_dt)
-
-
 def update_cluster(cluster: list[ParticleNp], event):
     for particle in cluster:
         particle.update(event[DT_IDX])
@@ -151,6 +137,19 @@ def plot(cluster):
 
     fig.tight_layout()
     plt.show()
+
+# def calculate_minimum_dt_to_collision(cluster: list[ParticleNp]):
+#     # TODO: this function currently just calculatinf the dt, bot not returning the type of collison
+#     #       and not the particles which taking part in the collision
+#     possibles_dt = []
+#     for i in range(3):
+#         for j in range(i + 1, 4):
+#             possibles_dt.append(
+#                 cluster[i].dt_to_collision_between(cluster[j]))
+#     for particle in cluster:
+#         possibles_dt.append(particle.min_dt_wall())
+#     return min(possibles_dt)
+
 
 
 if __name__ == "__main__":
