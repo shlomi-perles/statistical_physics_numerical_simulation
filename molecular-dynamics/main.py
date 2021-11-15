@@ -2,7 +2,7 @@ from particles.particleNp import ParticleNp
 import numpy as np
 import matplotlib.pyplot as plt
 
-MAX_VELOCITY = 1.5811388300841898
+MAX_VELOCITY = 2
 PARTICLE_IDX = 0
 OTHER_OBJ_IDX = 1
 PARTICLE_DIST_IDX = 2
@@ -42,7 +42,7 @@ def init_particles(radius):
     return np.array([a, b, c, d])
 
 
-def get_closest_event(cluster: list[ParticleNp], walls: tuple):
+def get_closest_event(cluster: np.array[ParticleNp], walls: tuple):
     """
     walls positions:
                     [0,-1]
@@ -99,19 +99,36 @@ def get_wall_event(closest_event, particle, wall):
 
     return closest_event
 
-def update_cluster(cluster: list[ParticleNp], event):
+
+def update_cluster(cluster: np.array[ParticleNp], event):
     for particle in cluster:
         particle.update(event[DT_IDX])
 
     if isinstance(event[OTHER_OBJ_IDX], ParticleNp):
+        particles_clash_update(event[PARTICLE_IDX], event[OTHER_OBJ_IDX])
         return
 
     wall_clash_update(event[PARTICLE_IDX], event[OTHER_OBJ_IDX])
 
 
-def particles_clash_update(clash_particle: ParticleNp,
-                           other_particle: ParticleNp):
-    slope = (clash_particle.position - other_particle.position)
+def particles_clash_update(particle: ParticleNp,
+                           other: ParticleNp):
+    dl = particle.position - other.position
+    dv = particle.velocity - other.velocity
+    dl_normed = np.linalg.norm(dl)
+
+    e_x = dl[0] / dl_normed
+    e_y = dl[1] / dl_normed
+    slope = np.array([e_x, e_y])
+    s_v = np.dot(dv, slope)
+
+    particle.vx(particle.vx + e_x * s_v)
+    particle.vy(particle.vy + e_y * s_v)
+
+    other.vx(other.vy - e_y * s_v)
+    other.vy(other.vy - e_y * s_v)
+
+
 
 
 def wall_clash_update(clash_particle: ParticleNp, wall):
@@ -128,7 +145,6 @@ def plot(cluster):
     ax = fig.add_subplot(1, 1, 1)
 
     for particle in cluster:
-        # TODO: change possible velocity to 200 values
         ax.plot(np.abs(particle['velocity']))
 
     ax.grid()
@@ -137,6 +153,43 @@ def plot(cluster):
 
     fig.tight_layout()
     plt.show()
+
+
+def discretization(cluster: np.array[ParticleNp]):
+    v_rounds = np.linspace(- MAX_VELOCITY, MAX_VELOCITY, 200)
+    # v_abs_rounds = np.linspace(0, MAX_VELOCITY, 100)
+    p_rounds = np.linspace(0, 1, 10)
+
+    for particle in cluster:
+        positions = particle.recordingFilm['position']
+        x = np.array([position[0] for position in positions])
+        y = np.array([position[1] for position in positions])
+        rounded_x = round_values(x, p_rounds)
+        rounded_y = round_values(y, p_rounds)
+        new_positions = [(rounded_x[i], rounded_y[i]) for i in range(rounded_x.size)]
+
+        velocities = particle.recordingFilm['velocity']
+        v_x = np.array([v[0] for v in velocities])
+        v_y = np.array([v[1] for v in velocities])
+        rounded_v_x = round_values(v_x, v_rounds)
+        rounded_v_y = round_values(v_y, v_rounds)
+        new_velocities = [(rounded_v_x[i], rounded_v_y[i]) for i in range(rounded_v_x.size)]
+
+        particle.recordingFilm({'position': new_positions, 'velocity': new_velocities})
+
+        # abs_v = np.array([np.linalg.norm(v) for v in velocities])
+        # rounded_abs_v = round_values(abs_v, v_abs_rounds)
+
+
+
+
+def round_values(values, rounds):
+    diff = np.subtract.outer(values, rounds)
+    indexes = np.argmin(abs(diff), axis=1)
+    return rounds[indexes]
+
+
+
 
 # def calculate_minimum_dt_to_collision(cluster: list[ParticleNp]):
 #     # TODO: this function currently just calculatinf the dt, bot not returning the type of collison

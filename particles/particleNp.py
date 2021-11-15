@@ -156,7 +156,7 @@ class ParticleNp:
                 self.position = self.position + self.velocity * discrete_dt
                 self.singleRecord()
 
-            self.position = update_pos
+        self.position = update_pos
 
     def min_dt_wall(self):
         """
@@ -185,7 +185,7 @@ class ParticleNp:
         dv_squared = np.power(np.linalg.norm(dv), 2)
         gama = s ** 2 - dv_squared * (dl_squared - self.r - other.r)
 
-        if gama > 0 and s < 0:
+        if gama > 0 > s:
             return - (s + np.sqrt(gama)) / dv_squared
         return np.inf
 
