@@ -1,5 +1,6 @@
 from __future__ import annotations
 import numpy as np
+import math
 
 MAX_X = 1
 MIN_X = 0
@@ -7,6 +8,16 @@ MAX_Y = 1
 MIN_Y = 0
 DT_STORE = 1
 MAX_VELOCITY = 2
+VELOCITY_NUM = 200
+VELOCITY_STEPS = MAX_VELOCITY * 2 / VELOCITY_NUM
+
+
+def round_value(value):
+    return math.floor(value / VELOCITY_STEPS) * VELOCITY_STEPS
+
+
+def velocity_index(value):
+    return int(round(round_value(value), 2) / VELOCITY_STEPS)
 
 
 class ParticleNp:
@@ -16,42 +27,20 @@ class ParticleNp:
 
     def __init__(self, particleID, position, velocity,
                  r=DEFAULT_RADIUS, energy=INIT_ENERGY):
+
         self.__id = particleID
         self.__energy = energy
         self.__position = np.array(position)
         self.__velocity = np.array(velocity)
         self.__r = r
-        self.__rounds = np.linspace(- MAX_VELOCITY, MAX_VELOCITY, 200)
 
         # Set to true if you want to record particles velocity and
         # position at each update. Records located at recordingFilm.
         self.__record = False
-        self.__recordingFilm = {'position': np.array([]),
-                                'velocity': np.array([])}
-
-    @property
-    def x(self):
-        return self.position[0]
-
-    @property
-    def y(self):
-        return self.position[1]
-
-    @property
-    def vx(self):
-        return self.velocity[0]
-
-    @property
-    def vy(self):
-        return self.velocity[1]
-
-    @vx.setter
-    def vx(self, new_vx):
-        self.velocity[0] = new_vx
-
-    @vy.setter
-    def vy(self, new_vy):
-        self.velocity[1] = new_vy
+        self.__recordingFilm = {'position': [[0] * 10 for _ in range(10)],
+                                'velocity': [0] * (VELOCITY_NUM // 2),
+                                'vx': [0] * VELOCITY_NUM,
+                                'vy': [0] * VELOCITY_NUM}
 
     @property
     def id(self):
@@ -137,13 +126,60 @@ class ParticleNp:
         """
         return np.linalg.norm(particle.velocity - self.velocity)
 
+    def min_dt_wall(self):
+        """
+        returns the minimum dt before meeting any wall
+        """
+        vertical_wall = True
+        if self.velocity[0] < 0:
+            dt = (self.position[0] - self.r) / (- self.velocity[0])
+        else:
+            dt = (1 - self.position[0] - self.r) / self.velocity[0]
+
+        if self.velocity[1] < 0:
+            temp_dt = (self.position[1] - self.r) / -self.velocity[1]
+            temp_vertical_wall = False
+        else:
+            temp_dt = (1 - self.position[1] - self.r) / self.velocity[1]
+            temp_vertical_wall = False
+
+        if temp_dt < dt:
+            dt = temp_dt
+            vertical_wall = temp_vertical_wall
+
+        return dt, vertical_wall
+
+    def dt_to_collision_between(self, other: ParticleNp):
+        dl = self.position - other.position
+        dv = self.velocity - other.velocity
+        s = np.dot(dv, dl)
+        dl_squared = np.dot(dl, dl)
+        dv_squared = np.dot(dv, dv)
+        gama = s ** 2 - dv_squared * (dl_squared - 4 * self.r ** 2)
+
+        if gama > 0 > s:
+            return - (s + gama ** 0.5) / dv_squared
+        return np.inf
+
     def singleRecord(self):
         """
         Record current state only. One record will be add to recordingFilm.
         :return:
         """
-        np.append(self.recordingFilm['position'], round(self.position, 1))
-        np.append(self.recordingFilm['velocity'], self.round_value(self.velocity))
+        round_pos = np.floor(self.position * 10)
+        x = 9 if round_pos[0] == 10. else int(round_pos[0])
+        y = 9 if round_pos[1] == 10. else int(round_pos[1])
+
+        self.recordingFilm['position'][x][y] += 1
+        a = velocity_index(np.linalg.norm(self.velocity))
+        self.recordingFilm['velocity'][
+            velocity_index(np.linalg.norm(self.velocity))] += 1
+
+        self.recordingFilm['vx'][
+            velocity_index(self.velocity[0] + MAX_VELOCITY)] += 1
+
+        self.recordingFilm['vy'][
+            velocity_index(self.velocity[1] + MAX_VELOCITY)] += 1
 
     def update(self, dt):
         """
@@ -154,47 +190,12 @@ class ParticleNp:
         update_pos = self.position + self.velocity * dt
 
         if self.record:
-            for discrete_dt in np.linspace(0, dt, dt.astype(int)):
+            for discrete_dt in np.linspace(1, dt, dt.astype(int)):
                 self.position = self.position + self.velocity * discrete_dt
                 self.singleRecord()
 
         self.position = update_pos
-
-    def min_dt_wall(self):
-        """
-        returns the minimum dt before meeting any wall
-        """
-        values = []
-        if self.velocity[0] < 0:
-            values.append(
-                (self.position[0] - self.r) / abs(self.velocity[0]))
-        else:
-            values.append((1 - self.position[0] - self.r) / self.velocity[0])
-
-        if self.velocity[1] < 0:
-            values.append(
-                (self.position[1] - self.r) / abs(self.velocity[1]))
-        else:
-            values.append((1 - self.position[1] - self.r) / self.velocity[1])
-        return min(values)
-
-    def dt_to_collision_between(self, other: ParticleNp):
-
-        dl = self.position - other.position
-        dv = self.velocity - other.velocity
-        s = np.dot(dv, dl)
-        dl_squared = np.power(np.linalg.norm(dl), 2)
-        dv_squared = np.power(np.linalg.norm(dv), 2)
-        gama = s ** 2 - dv_squared * (dl_squared - self.r - other.r)
-
-        if gama > 0 > s:
-            return - (s + np.sqrt(gama)) / dv_squared
-        return np.inf
-
-    def round_value(self, value, rounds):
-        diff = np.subtract(value, rounds)
-        index = np.argmin(abs(diff), axis=1)
-        return rounds[index]
+        self.singleRecord()
 
 
 class MinEnergyError(ArithmeticError):
