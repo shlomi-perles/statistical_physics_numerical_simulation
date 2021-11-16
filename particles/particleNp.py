@@ -12,12 +12,8 @@ VELOCITY_NUM = 200
 VELOCITY_STEPS = MAX_VELOCITY * 2 / VELOCITY_NUM
 
 
-def round_value(value):
-    return math.floor(value / VELOCITY_STEPS) * VELOCITY_STEPS
-
-
 def velocity_index(value):
-    return int(round(round_value(value), 2) / VELOCITY_STEPS)
+    return int(value / 4 * 200)
 
 
 class ParticleNp:
@@ -37,10 +33,11 @@ class ParticleNp:
         # Set to true if you want to record particles velocity and
         # position at each update. Records located at recordingFilm.
         self.__record = False
-        self.__recordingFilm = {'position': [[0] * 10 for _ in range(10)],
-                                'velocity': [0] * (VELOCITY_NUM // 2),
-                                'vx': [0] * VELOCITY_NUM,
-                                'vy': [0] * VELOCITY_NUM}
+        self.__recordingFilm = {
+            'position': [[0] * 10 for _ in range(10)],
+            'velocity': [0] * (VELOCITY_NUM // 2),
+            'vx': [0] * VELOCITY_NUM,
+            'vy': [0] * VELOCITY_NUM}
 
     @property
     def id(self):
@@ -171,7 +168,6 @@ class ParticleNp:
         y = 9 if round_pos[1] == 10. else int(round_pos[1])
 
         self.recordingFilm['position'][x][y] += 1
-        a = velocity_index(np.linalg.norm(self.velocity))
         self.recordingFilm['velocity'][
             velocity_index(np.linalg.norm(self.velocity))] += 1
 
@@ -187,15 +183,8 @@ class ParticleNp:
         particle state at the and if record flag set to True.
         :return:
         """
-        update_pos = self.position + self.velocity * dt
-
-        if self.record:
-            for discrete_dt in np.linspace(1, dt, dt.astype(int)):
-                self.position = self.position + self.velocity * discrete_dt
-                self.singleRecord()
-
-        self.position = update_pos
-        self.singleRecord()
+        self.position = self.position + self.velocity * dt
+        a=8
 
 
 class MinEnergyError(ArithmeticError):
